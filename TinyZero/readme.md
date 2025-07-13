@@ -47,7 +47,7 @@ huggingface-cli download --resume-download Qwen/Qwen2.5-3B --local-dir ./models
 
 ### 核心逻辑
 
-#### 奖励函数
+#### 奖励函数【可自定义】
 
 位置：TinyZero/verl/utils/reward_score/countdown.py
 
@@ -68,7 +68,7 @@ gen_batch = batch.pop(batch_keys=['input_ids', 'attention_mask', 'position_ids']
 
 # 根据prompt生成对应的response，response个数由self.config.actor_rollout_ref.rollout.n控制
 gen_batch_output = self.actor_rollout_wg.generate_sequences(gen_batch)
-# 通过uid跟踪prompt，方便GRPO计算优势值
+# 通过uid跟踪prompt，方便GRPO中同组计算优势值
 batch.non_tensor_batch['uid'] = np.array([str(uuid.uuid4()) for _ in range(len(batch.batch))],dtype=object)
 
 # 重复n次prompt
