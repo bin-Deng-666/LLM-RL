@@ -1,50 +1,3 @@
-### 数据准备
-
-**原始数据：**https://huggingface.co/datasets/Jiayi-Pan/Countdown-Tasks-3to4/viewer/default/train?p=4903&views%5B%5D=train
-
-**任务描述：**给定一组数字（每个数字仅能使用一次）和四种基本运算（加、减、乘、除），通过合理的运算顺序组合，最终计算结果必须等于目标值 `target`（例如经典的24点游戏中 `target = 24`）。
-
-**命令：**
-
-```bash
-python ./examples/data_preprocess/countdown.py --local_dir ./data/countdown
-```
-
-**对话构造：**
-
-```python
-A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer.
-User: Using the numbers {numbers}, create an equation that equals {target}. You can use basic arithmetic operations (+, -, *, /) and each number can only be used once. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer> (1 + 2) / 3 </answer>.
-Assistant: Let me solve this step by step.
-<think>
-```
-
-**样例展示：**
-
-```python
-target: 50
-nums: [30 50 53 82]
-data_source: countdown
-prompt: [{'content': 'A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer.\nUser: Using the numbers [30, 50, 53, 82], create an equation that equals 50. You can use basic arithmetic operations (+, -, *, /) and each number can only be used once. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer> (1 + 2) / 3 </answer>.\nAssistant: Let me solve this step by step.\n<think>', 'role': 'user'}]
-ability: math
-reward_model: {'ground_truth': {'numbers': array([30, 50, 53, 82]), 'target': 50}, 'style': 'rule'}
-extra_info: {'index': 36680, 'split': 'train'}
-```
-
-### 模型准备
-
-**模型：**https://huggingface.co/Qwen/Qwen2.5-3B
-
-**命令：**
-
-```bash
-huggingface-cli download --resume-download Qwen/Qwen2.5-3B --local-dir ./models
-```
-
-### 训练代码
-
-
-
 ### 核心逻辑
 
 #### 奖励函数【可自定义】
@@ -55,7 +8,7 @@ huggingface-cli download --resume-download Qwen/Qwen2.5-3B --local-dir ./models
 
 #### RL角色定义
 
-位置：/TinyZero/verl/workers/megatron_workers.py
+位置：TinyZero/verl/workers/megatron_workers.py
 
 角色定义：在Actor、RefPolicy、Critic、RewardModel和Rollout这几个组件中，Rollout是根据prompt生成response的过程，可能由Actor或RefPolicy执行（verl实现是基于Actor进行rollout的on-policy策略）。因此可以将这些类归纳为ActorRolloutRefWorker、CriticWorker和RewardModelWorker三种工作类型。
 
@@ -129,3 +82,49 @@ if self.config.trainer.critic_warmup <= self.global_steps:
 
 位置：TinyZero/verl/trainer/ppo/core_algos.py
 
+
+
+### 数据准备
+
+**原始数据**：https://huggingface.co/datasets/Jiayi-Pan/Countdown-Tasks-3to4/viewer/default/train?p=4903&views%5B%5D=train
+
+**任务描述**：给定一组数字（每个数字仅能使用一次）和四种基本运算（加、减、乘、除），通过合理的运算顺序组合，最终计算结果必须等于目标值 `target`（例如经典的24点游戏中 `target = 24`）。
+
+**命令**：
+
+```bash
+python ./examples/data_preprocess/countdown.py --local_dir ./data/countdown
+```
+
+**对话构造**：
+
+```python
+A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer.
+User: Using the numbers {numbers}, create an equation that equals {target}. You can use basic arithmetic operations (+, -, *, /) and each number can only be used once. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer> (1 + 2) / 3 </answer>.
+Assistant: Let me solve this step by step.
+<think>
+```
+
+**样例展示**：
+
+```python
+target: 50
+nums: [30 50 53 82]
+data_source: countdown
+prompt: [{'content': 'A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer.\nUser: Using the numbers [30, 50, 53, 82], create an equation that equals 50. You can use basic arithmetic operations (+, -, *, /) and each number can only be used once. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer> (1 + 2) / 3 </answer>.\nAssistant: Let me solve this step by step.\n<think>', 'role': 'user'}]
+ability: math
+reward_model: {'ground_truth': {'numbers': array([30, 50, 53, 82]), 'target': 50}, 'style': 'rule'}
+extra_info: {'index': 36680, 'split': 'train'}
+```
+
+### 模型准备
+
+**模型**：https://huggingface.co/Qwen/Qwen2.5-3B
+
+**命令**：
+
+```bash
+huggingface-cli download --resume-download Qwen/Qwen2.5-3B --local-dir ./models
+```
+
+### 训练代码
