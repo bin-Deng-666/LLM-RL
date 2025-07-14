@@ -1,4 +1,4 @@
-### 配置
+### 基础配置
 
 位置：RAGEN/config/base.yaml
 
@@ -18,7 +18,7 @@
 
 位置：RAGEN/external/webshop-minimal/webshop_minimal/env.py中的step
 
-返回值说明：`state` 是一个包含了历史轨迹的字符串。它的结构大致为"前一步执行的动作 [SEP] 前一步的观测 [SEP] 刚执行的动作 [SEP] 当前的观测"。`status` 字典主要包含`reward`、`done`和`info`三个key：`reward`在除了“购买”之外的所有步骤（如搜索、点击商品、翻页等），它的值都保持为 0.0；`done`的值会一直保持 False，直到用户执行了购买操作；`info`来自于 `get_reward` 函数返回的 `info` 对象。这个 `info` 字典详细记录了奖励计算的细节，比如哪些商品属性匹配了任务目标，哪些没有匹配，以及各自的分数。
+返回值说明：总共分为state和status两个返回值。`state` 是一个包含了历史轨迹的字符串。它的结构大致为"前一步执行的动作 [SEP] 前一步的观测 [SEP] 刚执行的动作 [SEP] 当前的观测"。`status` 字典主要包含`reward`、`done`和`info`三个key：`reward`在除了“购买”之外的所有步骤（如搜索、点击商品、翻页等），它的值都保持为 0.0；`done`的值会一直保持 False，直到用户执行了购买操作；`info`来自于 `get_reward` 函数返回的 `info` 对象。这个 `info` 字典详细记录了奖励计算的细节，比如哪些商品属性匹配了任务目标，哪些没有匹配，以及各自的分数。
 
 总结：该环境为结果为导向的reward，并不会对agent的探索过程轨迹进行reward。
 
@@ -27,6 +27,10 @@
 位置：RAGEN/ragen/trainer/agent_trainer.py中的RayAgentTrainer的fit
 
 ### Agent Rollout逻辑
+
+与大语言模型（LLM）的强化学习（RL）中的 “rollout” 不同，智能体（agent）的强化学习采样是一个多轮过程：它会生成工具调用信息、获取工具返回结果，最终才输出回答。因此，智能体的 “rollout” 必须在真实环境中完成交互，而非仅在模型内部完成文本生成。
+
+RAGEN通过es_manger和ctx_manager来实现这个过程。
 
 **es_manager**
 
@@ -61,7 +65,7 @@ for i in range(self.config.agent_proxy.max_turn):
 
 ### 总结
 
-1. **高度的定制化要求与陡峭的学习曲线**： RAGEN 作为一个通用的 RL Agent 框架，要求用户深度参与三个核心模块的定制：
+1. **高度的定制化要求**： RAGEN 作为一个通用的 RL Agent 框架，要求用户深度参与三个核心模块的定制：
    - **环境 (Env) 适配**：必须将具体的 Tool-Call 任务（如 API 调用、代码执行）封装成符合 `gymnasium` 接口的 RL 环境，这需要自行定义复杂的状态表示、动作空间映射和奖励函数【此处是能够接受而且必须要做的配置～】。
    - **执行与状态管理 (es_manager)**：需要通过 YAML 精确配置环境的并行数量、分组、种子等，以服务于框架为 RL 实验设计的评估和采样逻辑【此处得重写我应该去存储什么样的环境输出，此处作者每一个轨迹都存储了reward，但其实对tool_call的轨迹来说是不必要的】。
    - **上下文构建 (ctx_manager)**：需要深度定制 LLM 的 Prompt 格式、历史对话的拼接逻辑以及模型响应的解析方式，以适配特定的模型和任务范式（例如 CoT）【作者在此处加入了许多自己的提示词约束，比如格式和长度约束，因此得自己去重写构建大模型输入messages的函数】。
